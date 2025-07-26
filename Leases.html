@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leases - PHG Accounting Web App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body {margin:0;font-family:'Roboto',sans-serif;
+      background:url('https://static.vecteezy.com/system/resources/thumbnails/056/656/957/small/a-serene-hospital-corridor-featuring-modern-design-plants-and-soft-lighting-creating-a-calming-atmosphere-photo.JPG') 
+      no-repeat center center fixed;background-size:cover;display:flex;flex-direction:column;min-height:100vh;}
+    header {background-color:rgba(0,48,87,0.9);color:#fff;display:flex;align-items:center;justify-content:space-between;
+      padding:10px 40px;box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+    .logo img {height:50px;}
+    nav ul {list-style:none;display:flex;margin:0;padding:0;}
+    nav ul li {margin-left:30px;}
+    nav ul li a {text-decoration:none;color:#ffffff;font-weight:500;font-size:18px;position:relative;transition:color 0.3s ease;}
+    nav ul li a:hover {color:#f8b600;}
+    .container {flex:1;margin:40px auto;padding:25px 40px;text-align:center;background:rgba(255,255,255,0.8);
+      border-radius:8px;max-width:900px;}
+    footer {background-color:rgba(0,48,87,0.9);color:#fff;text-align:center;padding:15px 20px;font-size:14px;
+      box-shadow:0 -2px 6px rgba(0,0,0,0.2);}
+    .inputs {display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px;text-align:left;}
+    .inputs label {font-weight:bold;}
+    .inputs input {width:95%;padding:8px;border:1px solid #ccc;border-radius:4px;}
+    #amortizationSchedule {width:100%;border-collapse:collapse;margin-top:20px;}
+    #amortizationSchedule th,#amortizationSchedule td {border:1px solid #ccc;padding:6px;text-align:center;font-size:14px;}
+    #amortizationSchedule th {background-color:#003057;color:#fff;}
+    button {margin:10px 5px;padding:8px 15px;background-color:#003057;color:white;border:none;border-radius:4px;cursor:pointer;}
+    button:hover {background-color:#f8b600;color:#003057;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><img src="https://www.phgworks.com/wp-content/uploads/2019/07/phg-logo.png" alt="PHG Logo"></div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="bankrec.html">Bank Rec</a></li>
+        <li><a href="prepaids.html">Prepaids</a></li>
+        <li><a href="fixed-assets.html">Fixed Assets</a></li>
+        <li><a href="leases.html">Leases</a></li>
+        <li><a href="clearing-account.html">Clearing Account</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div id="mainContent" class="container">
+    <h1 id="scheduleTitle">Lease Amortization Schedule</h1>
+
+    <div class="inputs">
+      <label for="commencementDate">Commencement Date</label>
+      <input type="date" id="commencementDate">
+
+      <label for="leaseTerm">Lease Term (months)</label>
+      <input type="number" id="leaseTerm" min="1">
+
+      <label for="monthlyPayment">Monthly Payment</label>
+      <input type="number" id="monthlyPayment" min="1">
+
+      <label for="discountRate">Discount Rate (%)</label>
+      <input type="number" id="discountRate" step="0.01" min="0">
+
+      <label for="leaseDescription">Lease Description (optional)</label>
+      <input type="text" id="leaseDescription" placeholder="Enter lease description">
+    </div>
+
+    <button id="generateButton">Generate Lease Amortization Schedule</button>
+
+    <h2 id="scheduleDescription"></h2>
+
+    <div style="margin-top: 15px; margin-bottom: 10px;">
+      <button onclick="exportToCSV()">Export to CSV</button>
+      <button onclick="exportToPDF()">Export to PDF</button>
+    </div>
+
+    <table id="amortizationSchedule">
+      <thead>
+        <tr>
+          <th>Month End</th>
+          <th>Period</th>
+          <th>Beg Balance</th>
+          <th>Payment</th>
+          <th>Interest</th>
+          <th>Principal</th>
+          <th>Ending Balance</th>
+          <th>ST Liab</th>
+          <th>LT Liab</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>Payment Breakdown</h2>
+    <canvas id="paymentChart" width="400" height="200"></canvas>
+  </div>
+
+  <footer>
+    <p>These tools are currently under development. For bug reports or issues, please contact Will Martin at 
+      <a href="mailto:wmartin@phgworks.com" style="color:#f8b600; text-decoration:none;">wmartin@phgworks.com</a>.
+    </p>
+  </footer>
+
+  <script>
+    function formatNumber(num){
+      return num.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+
+    function generateSchedule(){
+      const leaseTerm = parseInt(document.getElementById('leaseTerm').value);
+      const monthlyPayment = parseFloat(document.getElementById('monthlyPayment').value);
+      const discountRate = parseFloat(document.getElementById('discountRate').value)/100/12;
+      const startDate = new Date(document.getElementById('commencementDate').value);
+      const desc = document.getElementById('leaseDescription').value.trim();
+      if(isNaN(leaseTerm)||isNaN(monthlyPayment)||isNaN(discountRate)||!startDate){
+        alert('Please fill all fields.');
+        return;
+      }
+
+      const scheduleHeader = desc ? `${desc} Lease Amortization Schedule` : "Lease Amortization Schedule";
+      document.getElementById('scheduleDescription').textContent = scheduleHeader;
+
+      let balance = leaseTerm * monthlyPayment;
+      const tbody=document.querySelector('#amortizationSchedule tbody');
+      tbody.innerHTML='';
+      let labels=[], interestData=[], principalData=[];
+
+      for(let i=1;i<=leaseTerm;i++){
+        let interest = balance*discountRate;
+        let principal = monthlyPayment-interest;
+        balance -= principal;
+        if (i === leaseTerm) {
+          balance = 0;
+        }
+
+        let remainingPayments = leaseTerm - i;
+        let stLiab = 0;
+        let monthsToInclude = Math.min(12, remainingPayments);
+        for (let k = 1; k <= monthsToInclude; k++) {
+          stLiab += monthlyPayment / Math.pow(1 + discountRate, k);
+        }
+        let ltLiab = (remainingPayments <= 12) ? 0 : balance - stLiab;
+        if (remainingPayments > 12) {
+          ltLiab = balance - stLiab;
+        }
+
+        const endDate=new Date(startDate);
+        endDate.setMonth(startDate.getMonth()+i);
+
+        const row=`<tr>
+          <td>${endDate.toLocaleDateString()}</td>
+          <td>${i}</td>
+          <td>${formatNumber(balance+principal)}</td>
+          <td>${formatNumber(monthlyPayment)}</td>
+          <td>${formatNumber(interest)}</td>
+          <td>${formatNumber(principal)}</td>
+          <td>${formatNumber(balance)}</td>
+          <td>${formatNumber(stLiab)}</td>
+          <td>${formatNumber(ltLiab)}</td>
+        </tr>`;
+        tbody.insertAdjacentHTML('beforeend',row);
+
+        labels.push(i); interestData.push(interest); principalData.push(principal);
+      }
+
+      const ctx=document.getElementById('paymentChart').getContext('2d');
+      new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[
+        {label:'Interest',data:interestData,backgroundColor:'rgba(255,99,132,0.5)'},
+        {label:'Principal',data:principalData,backgroundColor:'rgba(54,162,235,0.5)'}
+      ]}});
+    }
+
+    document.getElementById('generateButton').addEventListener('click', generateSchedule);
+
+    function exportToCSV() {
+      const table = document.getElementById('amortizationSchedule');
+      let csv = [];
+      for (let i = 0; i < table.rows.length; i++) {
+        let row = [], cols = table.rows[i].querySelectorAll('th, td');
+        for (let j = 0; j < cols.length; j++) {
+          let data = cols[j].innerText;
+          if (i > 0 && j > 1) {
+            data = data.replace(/,/g, '');
+          }
+          data = data.replace(/"/g, '""');
+          row.push('"' + data + '"');
+        }
+        csv.push(row.join(','));
+      }
+      const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const downloadLink = document.createElement('a');
+      downloadLink.download = 'lease_amortization_schedule.csv';
+      downloadLink.href = URL.createObjectURL(csvFile);
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape');
+      const desc = document.getElementById('leaseDescription').value.trim();
+      const pdfTitle = desc ? `${desc} Lease Amortization Schedule` : "Lease Amortization Schedule";
+      doc.setFontSize(16);
+      doc.text(pdfTitle, 14, 15);
+
+      const table = document.getElementById("amortizationSchedule");
+      const headers = [];
+      const data = [];
+
+      table.querySelectorAll("thead th").forEach(th => headers.push(th.innerText));
+      table.querySelectorAll("tbody tr").forEach(tr => {
+        const row = [];
+        tr.querySelectorAll("td").forEach(td => row.push(td.innerText));
+        data.push(row);
+      });
+
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 25,
+        styles: { fontSize: 8 }
+      });
+
+      doc.save("lease_amortization_schedule.pdf");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prepaids - PHG Accounting Web App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  body {margin: 0;font-family: 'Roboto', sans-serif;background: url('https://static.vecteezy.com/system/resources/thumbnails/056/656/957/small/a-serene-hospital-corridor-featuring-modern-design-plants-and-soft-lighting-creating-a-calming-atmosphere-photo.JPG') no-repeat center center fixed;background-size: cover;display: flex;flex-direction: column;min-height: 100vh;}
+  header {background-color: rgba(0,48,87,0.9);color: #fff;display: flex;align-items: center;justify-content: space-between;padding: 10px 40px;box-shadow: 0 2px 6px rgba(0,0,0,0.2);}
+  .logo img { height: 50px; }
+  nav ul { list-style: none; display: flex; margin: 0; padding: 0; }
+  nav ul li { margin-left: 30px; }
+  nav ul li a {text-decoration: none;color: #ffffff;font-weight: 500;font-size: 18px;position: relative;transition: color 0.3s ease;}
+  nav ul li a:hover { color: #f8b600; }
+  .container {flex: 1;display: flex;flex-direction: column;justify-content: flex-start;align-items: center;text-align: center;margin: 60px auto;padding: 25px 40px;background: rgba(255,255,255,0.8);border-radius: 8px;max-width: 1000px;width: 90%;}
+  .container h1 { font-size: 2rem; color: #003057; margin-bottom: 20px; }
+  .fiscal-year-container {display: flex; align-items: center; gap: 10px; margin-bottom: 15px;}
+  footer {background-color: rgba(0,48,87,0.9);color: #fff;text-align: center;padding: 15px 20px;font-size: 14px;box-shadow: 0 -2px 6px rgba(0,0,0,0.2);}
+  form {display: grid;grid-template-columns: repeat(auto-fit,minmax(150px,1fr));gap: 15px;width: 100%;margin-bottom: 20px;}
+  form input, form select {padding: 8px;font-size: 14px;border: 1px solid #aaa;border-radius: 4px;}
+  button {padding: 10px 20px;background-color: #003057;color: #fff;border: none;border-radius: 4px;cursor: pointer;font-weight: bold;}
+  button:hover {background-color: #005090;}
+  table {border-collapse: collapse;width: 100%;margin-top: 20px;background-color: white;font-size: 12px;}
+  th, td {border: 1px solid #ccc;padding: 6px;text-align: right;}
+  th { background-color: #003057; color: white; text-align: center; }
+  td:first-child, th:first-child { text-align: center; }
+  tbody tr:nth-child(odd) { background-color: #f9f9f9; }
+  tbody tr:nth-child(even) { background-color: #ffffff; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo"><img src="https://www.phgworks.com/wp-content/uploads/2019/07/phg-logo.png" alt="PHG Logo"></div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="bankrec.html">Bank Rec</a></li>
+        <li><a href="Prepaids.html">Prepaids</a></li>
+        <li><a href="FixedAssets.html">Fixed Assets</a></li>
+        <li><a href="Leases.html">Leases</a></li>
+        <li><a href="ClearingAccount.html">Clearing Account</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h1>Prepaid Amortization Schedule</h1>
+
+    <div class="fiscal-year-container">
+      <label for="fiscalYear">Fiscal Year:</label>
+      <select id="fiscalYear"></select>
+    </div>
+
+    <!-- Input Form -->
+    <form id="prepaidForm">
+      <input type="text" id="vendor" placeholder="Vendor" value="GE Healthcare" required>
+      <input type="text" id="invoice" placeholder="Invoice #" value="INV-1001" required>
+      <input type="text" id="glacct" placeholder="GL Exp Acct" value="6100" required>
+      <input type="number" id="amount" placeholder="Amount" value="12000" required>
+      <input type="date" id="startDate" value="2025-01-01" required>
+      <input type="date" id="endDate" value="2025-12-31" required>
+      <button type="submit">Add to Schedule</button>
+    </form>
+
+    <!-- Table -->
+    <div id="schedule"></div>
+    <div style="margin-top:15px;">
+      <button onclick="exportExcel()">Export to Excel</button>
+      <button onclick="exportPDF()">Export to PDF</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>These tools are currently under development. For bug reports or issues, please contact Will Martin at 
+      <a href="mailto:wmartin@phgworks.com" style="color:#f8b600; text-decoration:none;">wmartin@phgworks.com</a>.
+    </p>
+  </footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script>
+  let allRows = JSON.parse(localStorage.getItem('prepaidRows')||'[]');
+  let currentYear = new Date().getFullYear();
+  let fiscalYearSelect = document.getElementById('fiscalYear');
+  for (let y=2020;y<=currentYear+1;y++){
+    let opt=document.createElement('option');opt.value=y;opt.text=y;fiscalYearSelect.appendChild(opt);
+  }
+  fiscalYearSelect.value=currentYear;
+
+  function saveRows(){localStorage.setItem('prepaidRows', JSON.stringify(allRows));}
+
+  function formatNumber(num){return num.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+  function deleteRow(index){allRows.splice(index,1);saveRows();renderTable();}
+
+  function editRow(index){
+    const row = allRows[index];
+    document.getElementById('vendor').value=row.vendor;
+    document.getElementById('invoice').value=row.invoice;
+    document.getElementById('glacct').value=row.glacct;
+    document.getElementById('amount').value=row.amount;
+    fiscalYearSelect.value=row.year;
+    deleteRow(index);
+  }
+
+  document.getElementById('prepaidForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const vendor=document.getElementById('vendor').value;
+    const invoice=document.getElementById('invoice').value;
+    const glacct=document.getElementById('glacct').value;
+    const amount=parseFloat(document.getElementById('amount').value);
+    const startDate=new Date(document.getElementById('startDate').value);
+    const endDate=new Date(document.getElementById('endDate').value);
+    const year=parseInt(fiscalYearSelect.value);
+
+    let months=(endDate.getFullYear()-startDate.getFullYear())*12+(endDate.getMonth()-startDate.getMonth()+1);
+    const monthlyExpense=amount/months;
+    const monthlyData={};
+    for (let m=0;m<12;m++){const key=new Date(year,m,1).toLocaleString('default',{month:'short'});monthlyData[key]=0;}
+
+    let current=new Date(startDate);
+    for (let i=0;i<months;i++){
+      const yr=current.getFullYear();const monthIndex=current.getMonth();
+      if (yr===year){const key=new Date(yr,monthIndex,1).toLocaleString('default',{month:'short'});monthlyData[key]+=monthlyExpense;}
+      current.setMonth(current.getMonth()+1);
+    }
+
+    allRows.push({vendor,invoice,glacct,amount,year,monthlyData});
+    saveRows();renderTable();document.getElementById('prepaidForm').reset();
+  });
+
+  fiscalYearSelect.addEventListener('change',renderTable);
+
+  function renderTable(){
+    const selectedYear=parseInt(fiscalYearSelect.value);
+    if(allRows.length===0){document.getElementById('schedule').innerHTML='';return;}
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const totals={amount:0};months.forEach(m=>totals[m]=0);
+
+    let html=`<table><thead><tr><th>Vendor</th><th>Invoice #</th><th>GL Exp Acct</th><th>Amount</th>`;
+    months.forEach(m=>html+=`<th>${m} ${selectedYear}</th>`);
+    html+=`<th>Action</th></tr></thead><tbody>`;
+
+    allRows.forEach((row,index)=>{
+      if(row.year!==selectedYear)return;
+      totals.amount+=row.amount;
+      html+=`<tr><td>${row.vendor}</td><td>${row.invoice}</td><td>${row.glacct}</td><td>${formatNumber(row.amount)}</td>`;
+      months.forEach(m=>{const val=row.monthlyData[m]||0;totals[m]+=val;html+=`<td>${formatNumber(val)}</td>`;});
+      html+=`<td><button onclick="editRow(${index})">Edit</button> <button onclick="deleteRow(${index})">Delete</button></td></tr>`;
+    });
+
+    html+=`<tr><th colspan="3">Total</th><th>${formatNumber(totals.amount)}</th>`;
+    months.forEach(m=>html+=`<th>${formatNumber(totals[m])}</th>`);
+    html+=`<th></th></tr></tbody></table>`;
+    document.getElementById('schedule').innerHTML=html;
+  }
+
+  function exportExcel(){alert('Export to Excel functionality placeholder');}
+  function exportPDF(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l','pt','a4');
+    doc.text('Prepaid Amortization Schedule',40,40);
+    doc.autoTable({ html: document.querySelector('#schedule table') });
+    doc.save('prepaid_schedule.pdf');
+  }
+
+  renderTable();
+</script>
+</body>
+</html>
