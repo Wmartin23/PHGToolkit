@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MDS Nurse Billing Code Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #004d80;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    h1, h2 {
+      margin-bottom: 20px;
+    }
+    .upload-section {
+      margin-bottom: 20px;
+    }
+    input[type="file"] {
+      margin-top: 10px;
+    }
+    button {
+      background: #004d80;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #006bb3;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #eef7ff;
+      border-left: 5px solid #004d80;
+    }
+    #loading {
+      display: none;
+      margin-top: 20px;
+      font-weight: bold;
+      color: #004d80;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Billing Code Assistant</h1>
+  </header>
+  <main>
+    <h2>Upload Patient Chart (PDF)</h2>
+    <div class="upload-section">
+      <input type="file" id="pdfFile" accept="application/pdf">
+      <button onclick="processPDF()">Analyze and Get Code</button>
+    </div>
+    <div id="loading">Analyzing document... Please wait.</div>
+    <div id="result"></div>
+  </main>
+
+  <script>
+    async function processPDF() {
+      const fileInput = document.getElementById('pdfFile');
+      const file = fileInput.files[0];
+      const loading = document.getElementById('loading');
+      const result = document.getElementById('result');
+
+      if (!file) {
+        alert('Please upload a PDF file first.');
+        return;
+      }
+
+      loading.style.display = 'block';
+      result.innerHTML = '';
+
+      // Convert file to Base64
+      const base64File = await toBase64(file);
+
+      // Simulate API call to AI backend (replace with actual AI service call)
+      setTimeout(() => {
+        loading.style.display = 'none';
+
+        // Simulated AI result
+        const billingCode = 'PDPM Code: NTIA';
+        const reasoning = `Based on the patient's diagnosis, therapy needs, and comorbidities found in the chart, the optimal code is NTIA. This maximizes hospital reimbursement under PDPM.`;
+
+        result.innerHTML = `<h3>Recommended Billing Code</h3><p><strong>${billingCode}</strong></p><h4>Reasoning:</h4><p>${reasoning}</p>`;
+      }, 2000);
+    }
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+  </script>
+</body>
+</html>
