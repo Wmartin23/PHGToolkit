@@ -18,6 +18,7 @@
     flex-direction: column;
     min-height: 100vh;
   }
+  /* Styles still apply to dynamically loaded header/footer */
   header {
     background-color: rgba(0,48,87,0.9);
     color: #fff;
@@ -53,6 +54,7 @@
     max-width: 700px;
   }
   .container h1 { font-size: 2rem; color: #003057; }
+
   footer {
     background-color: rgba(0,48,87,0.9);
     color: #fff;
@@ -61,6 +63,7 @@
     font-size: 14px;
     box-shadow: 0 -2px 6px rgba(0,0,0,0.2);
   }
+
   .login-box {
     display: flex;
     flex-direction: column;
@@ -93,14 +96,8 @@
 </head>
 <body>
 
-  <!-- Load the shared header -->
+  <!-- Dynamic header -->
   <div id="header"></div>
-  <script>
-    fetch('header.html')
-      .then(response => response.text())
-      .then(html => document.getElementById('header').innerHTML = html)
-      .catch(err => console.error('Error loading header:', err));
-  </script>
 
   <!-- Login form -->
   <div class="container" id="login-container">
@@ -118,30 +115,39 @@
     <h1>This Page Is Currently Under Development</h1>
   </div>
 
-  <footer>
-    <p>These tools are currently under development. For bug reports or issues, please contact Will Martin at 
-      <a href="mailto:wmartin@phgworks.com" style="color:#f8b600; text-decoration:none;">wmartin@phgworks.com</a>.
-    </p>
-  </footer>
+  <!-- Dynamic footer -->
+  <div id="footer"></div>
 
 <script>
-function validateLogin() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value.trim();
-  if (username === 'phg' && password === 'password') {
-    document.getElementById('login-container').style.display = 'none';
-    document.getElementById('main-content').style.display = 'flex';
-  } else {
-    alert('Invalid username or password. Please try again.');
-  }
-}
+  // Load header
+  fetch('header.html')
+    .then(response => response.text())
+    .then(html => document.getElementById('header').innerHTML = html)
+    .catch(err => console.error('Error loading header:', err));
 
-// Allow pressing Enter to trigger login
-document.getElementById('login-container').addEventListener('keypress', function(event) {
-  if (event.key === 'Enter') {
-    validateLogin();
+  // Load footer
+  fetch('footer.html')
+    .then(response => response.text())
+    .then(html => document.getElementById('footer').innerHTML = html)
+    .catch(err => console.error('Error loading footer:', err));
+
+  function validateLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    if (username === 'phg' && password === 'password') {
+      document.getElementById('login-container').style.display = 'none';
+      document.getElementById('main-content').style.display = 'flex';
+    } else {
+      alert('Invalid username or password. Please try again.');
+    }
   }
-});
+
+  // Allow pressing Enter to trigger login
+  document.getElementById('login-container').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+      validateLogin();
+    }
+  });
 </script>
 
 </body>

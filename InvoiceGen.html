@@ -9,26 +9,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-  body {margin:0;font-family:'Roboto',sans-serif;background:url('https://static.vecteezy.com/system/resources/thumbnails/056/656/957/small/a-serene-hospital-corridor-featuring-modern-design-plants-and-soft-lighting-creating-a-calming-atmosphere-photo.JPG') no-repeat center center fixed;background-size:cover;display:flex;flex-direction:column;min-height:100vh;}
-  header{background-color:rgba(0,48,87,0.9);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 40px;box-shadow:0 2px 6px rgba(0,0,0,0.2);} .logo img{height:50px;} nav ul{list-style:none;display:flex;margin:0;padding:0;} nav ul li{margin-left:30px;} nav ul li a{text-decoration:none;color:#fff;font-weight:500;font-size:18px;transition:color .3s;} nav ul li a:hover{color:#f8b600;}
+  body {margin:0;font-family:'Roboto',sans-serif;
+    background:url('https://static.vecteezy.com/system/resources/thumbnails/056/656/957/small/a-serene-hospital-corridor-featuring-modern-design-plants-and-soft-lighting-creating-a-calming-atmosphere-photo.JPG') no-repeat center center fixed;
+    background-size:cover;display:flex;flex-direction:column;min-height:100vh;}
+  /* Styling for dynamically loaded header and footer */
+  header{background-color:rgba(0,48,87,0.9);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 40px;box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+  .logo img{height:50px;}
+  nav ul{list-style:none;display:flex;margin:0;padding:0;}
+  nav ul li{margin-left:30px;}
+  nav ul li a{text-decoration:none;color:#fff;font-weight:500;font-size:18px;transition:color .3s;}
+  nav ul li a:hover{color:#f8b600;}
   .container{flex:1;display:flex;justify-content:center;align-items:center;margin:40px auto;padding:25px 40px;background:rgba(255,255,255,0.8);border-radius:8px;max-width:800px;flex-direction:column;text-align:left;}
-  h1{font-size:2rem;color:#003057;margin-bottom:20px;} form label{display:block;margin-top:10px;font-weight:500;color:#003057;} form input,form textarea{width:100%;padding:8px;margin-top:5px;border:1px solid #ccc;border-radius:4px;} button{margin-top:20px;padding:10px 20px;background-color:#003057;color:white;border:none;border-radius:4px;font-size:16px;cursor:pointer;} button:hover{background-color:#005080;}
+  h1{font-size:2rem;color:#003057;margin-bottom:20px;}
+  form label{display:block;margin-top:10px;font-weight:500;color:#003057;}
+  form input,form textarea{width:100%;padding:8px;margin-top:5px;border:1px solid #ccc;border-radius:4px;}
+  button{margin-top:20px;padding:10px 20px;background-color:#003057;color:white;border:none;border-radius:4px;font-size:16px;cursor:pointer;}
+  button:hover{background-color:#005080;}
   footer{background-color:rgba(0,48,87,0.9);color:#fff;text-align:center;padding:15px 20px;font-size:14px;box-shadow:0 -2px 6px rgba(0,0,0,0.2);}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo"><img src="https://www.phgworks.com/wp-content/uploads/2019/07/phg-logo.png" alt="PHG Logo"></div>
-  <nav><ul>
-    <li><a href="index.html">Home</a></li>
-    <li><a href="bankrec.html">Bank Rec</a></li>
-    <li><a href="Prepaids.html">Prepaids</a></li>
-    <li><a href="FixedAssets.html">Fixed Assets</a></li>
-    <li><a href="Leases.html">Leases</a></li>
-    <li><a href="ClearingAccount.html">Clearing Account</a></li>
-    <li><a href="InvoiceGen.html">InvoiceGen</a></li>
-  </ul></nav>
-</header>
+
+<!-- Dynamic header -->
+<div id="header"></div>
+
 <div class="container">
   <h1>Generate Invoice</h1>
   <form id="invoiceForm">
@@ -50,33 +54,60 @@
     <button type="button" onclick="generatePDF()">Generate PDF</button>
   </form>
 </div>
-<footer>
-  <p>These tools are currently under development. For bug reports or issues, please contact Will Martin at <a href="mailto:wmartin@phgworks.com" style="color:#f8b600;text-decoration:none;">wmartin@phgworks.com</a>.</p>
-</footer>
+
+<!-- Dynamic footer -->
+<div id="footer"></div>
+
 <script>
-function generatePDF(){
-  const{jsPDF}=window.jspdf;const doc=new jsPDF();
-  const inv=document.getElementById('invoiceNumber').value;
-  const date=document.getElementById('invoiceDate').value;
-  const billed=document.getElementById('billedTo').value;
-  const desc=document.getElementById('description').value;
-  const amt=document.getElementById('amount').value;
-  doc.setFontSize(18);doc.text('Invoice',105,20,{align:'center'});
-  doc.setFontSize(12);
-  doc.text(`Invoice #: ${inv}`,20,40);
-  doc.text(`Issue Date: ${date}`,20,50);
-  doc.text(`Due Date: (30 days)`,20,60);
-  doc.text(`Currency: USD`,20,70);
-  doc.text(`Billed To:`,20,90);doc.text(billed,20,100);
-  doc.text('Description',20,130);doc.text('Quantity',110,130);doc.text('Price',140,130);doc.text('Amount',170,130);
-  doc.line(20,132,190,132);
-  doc.text(desc,20,140);doc.text('1',115,140);doc.text(`$${amt}`,140,140);doc.text(`$${amt}`,170,140);
-  doc.text(`Subtotal: $${amt}`,140,200);
-  doc.text(`Tax Total: $0.00`,140,210);
-  doc.setFontSize(14);doc.text(`Amount Due: $${amt}`,140,220);
-  const safeBilled = billed.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
-  doc.save(`Invoice_${inv}-${safeBilled}.pdf`);
-}
+  // Load header and footer dynamically
+  fetch('header.html')
+    .then(r => r.text())
+    .then(html => document.getElementById('header').innerHTML = html)
+    .catch(err => console.error('Error loading header:', err));
+
+  fetch('footer.html')
+    .then(r => r.text())
+    .then(html => document.getElementById('footer').innerHTML = html)
+    .catch(err => console.error('Error loading footer:', err));
+
+  function generatePDF(){
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF();
+    const inv=document.getElementById('invoiceNumber').value;
+    const date=document.getElementById('invoiceDate').value;
+    const billed=document.getElementById('billedTo').value;
+    const desc=document.getElementById('description').value;
+    const amt=document.getElementById('amount').value;
+
+    doc.setFontSize(18);
+    doc.text('Invoice',105,20,{align:'center'});
+    doc.setFontSize(12);
+    doc.text(`Invoice #: ${inv}`,20,40);
+    doc.text(`Issue Date: ${date}`,20,50);
+    doc.text(`Due Date: (30 days)`,20,60);
+    doc.text(`Currency: USD`,20,70);
+    doc.text(`Billed To:`,20,90);
+    doc.text(billed,20,100);
+
+    doc.text('Description',20,130);
+    doc.text('Quantity',110,130);
+    doc.text('Price',140,130);
+    doc.text('Amount',170,130);
+    doc.line(20,132,190,132);
+
+    doc.text(desc,20,140);
+    doc.text('1',115,140);
+    doc.text(`$${amt}`,140,140);
+    doc.text(`$${amt}`,170,140);
+    doc.text(`Subtotal: $${amt}`,140,200);
+    doc.text(`Tax Total: $0.00`,140,210);
+    doc.setFontSize(14);
+    doc.text(`Amount Due: $${amt}`,140,220);
+
+    const safeBilled = billed.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+    doc.save(`Invoice_${inv}-${safeBilled}.pdf`);
+  }
 </script>
+
 </body>
 </html>
