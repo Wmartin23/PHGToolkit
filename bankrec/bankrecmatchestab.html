@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Transactions</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  body {margin: 0;font-family: 'Roboto', sans-serif;background: #f5f6fa;}
+  header {background: #2c3e50;color: white;padding: 15px 30px;font-size: 24px;font-weight: bold;}
+  main {padding: 20px;display: flex;gap: 20px;}
+  .table-container {flex: 1;}
+  .table-title {font-size: 18px;font-weight: bold;margin-bottom: 10px;}
+  table {width: 100%;border-collapse: collapse;background: white;box-shadow: 0 0 10px rgba(0,0,0,0.1);}
+  th, td {padding: 12px;text-align: left;border-bottom: 1px solid #ddd;}
+  th {background: #34495e;color: white;}
+  tr:hover {background-color: #f1f1f1;}
+  .filter-input {width: 90%;padding: 4px;font-size: 12px;margin-top: 5px;}
+  .sort-button, .filter-button, .remove-filter-button {display: inline-block;margin: 5px 2px 0 2px;padding: 4px 8px;font-size: 12px;cursor: pointer;background: #2ecc71;border: none;color: white;border-radius: 4px;}
+  .filter-button {background: #3498db;}
+  .remove-filter-button {background: #e74c3c;}
+  .match-input {width: 60px; padding: 4px;}
+</style>
+</head>
+<body>
+<header>Bank Transactions</header>
+<main>
+  <div class="table-container">
+    <div class="table-title">Bank Transactions</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Match #</th>
+          <th>Date<br><input type="text" class="filter-input" data-table="1" data-column="date" placeholder="Filter"><div><button class="filter-button" data-table="1">Apply Filter</button><button class="remove-filter-button" data-table="1" data-column="date">Remove Filter</button></div><button class="sort-button" data-table="1" data-column="date">Sort</button></th>
+          <th>Description<br><input type="text" class="filter-input" data-table="1" data-column="description" placeholder="Filter"><div><button class="filter-button" data-table="1">Apply Filter</button><button class="remove-filter-button" data-table="1" data-column="description">Remove Filter</button></div><button class="sort-button" data-table="1" data-column="description">Sort</button></th>
+          <th>Category<br><input type="text" class="filter-input" data-table="1" data-column="category" placeholder="Filter"><div><button class="filter-button" data-table="1">Apply Filter</button><button class="remove-filter-button" data-table="1" data-column="category">Remove Filter</button></div><button class="sort-button" data-table="1" data-column="category">Sort</button></th>
+          <th>Amount<br><input type="text" class="filter-input" data-table="1" data-column="amount" placeholder="Filter"><div><button class="filter-button" data-table="1">Apply Filter</button><button class="remove-filter-button" data-table="1" data-column="amount">Remove Filter</button></div><button class="sort-button" data-table="1" data-column="amount">Sort</button></th>
+          <th>Balance<br><input type="text" class="filter-input" data-table="1" data-column="balance" placeholder="Filter"><div><button class="filter-button" data-table="1">Apply Filter</button><button class="remove-filter-button" data-table="1" data-column="balance">Remove Filter</button></div><button class="sort-button" data-table="1" data-column="balance">Sort</button></th>
+        </tr>
+      </thead>
+      <tbody id="transactions"></tbody>
+    </table>
+  </div>
+  <div class="table-container">
+    <div class="table-title">GL Transactions</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Match #</th>
+          <th>Date<br><input type="text" class="filter-input" data-table="2" data-column="date" placeholder="Filter"><div><button class="filter-button" data-table="2">Apply Filter</button><button class="remove-filter-button" data-table="2" data-column="date">Remove Filter</button></div><button class="sort-button" data-table="2" data-column="date">Sort</button></th>
+          <th>Description<br><input type="text" class="filter-input" data-table="2" data-column="description" placeholder="Filter"><div><button class="filter-button" data-table="2">Apply Filter</button><button class="remove-filter-button" data-table="2" data-column="description">Remove Filter</button></div><button class="sort-button" data-table="2" data-column="description">Sort</button></th>
+          <th>Category<br><input type="text" class="filter-input" data-table="2" data-column="category" placeholder="Filter"><div><button class="filter-button" data-table="2">Apply Filter</button><button class="remove-filter-button" data-table="2" data-column="category">Remove Filter</button></div><button class="sort-button" data-table="2" data-column="category">Sort</button></th>
+          <th>Amount<br><input type="text" class="filter-input" data-table="2" data-column="amount" placeholder="Filter"><div><button class="filter-button" data-table="2">Apply Filter</button><button class="remove-filter-button" data-table="2" data-column="amount">Remove Filter</button></div><button class="sort-button" data-table="2" data-column="amount">Sort</button></th>
+          <th>Balance<br><input type="text" class="filter-input" data-table="2" data-column="balance" placeholder="Filter"><div><button class="filter-button" data-table="2">Apply Filter</button><button class="remove-filter-button" data-table="2" data-column="balance">Remove Filter</button></div><button class="sort-button" data-table="2" data-column="balance">Sort</button></th>
+        </tr>
+      </thead>
+      <tbody id="transactions2"></tbody>
+    </table>
+  </div>
+</main>
+<script>
+  let fakeTransactions = [
+    {date: '2025-07-25', description: 'Office Supplies', category: 'Office', amount: -120.50, balance: 4850.25},
+    {date: '2025-07-24', description: 'Client Payment', category: 'Income', amount: 2500.00, balance: 4970.75},
+    {date: '2025-07-23', description: 'Internet Bill', category: 'Utilities', amount: -80.25, balance: 2470.75},
+    {date: '2025-07-21', description: 'Coffee Shop Meeting', category: 'Meals', amount: -25.00, balance: 2551.00},
+    {date: '2025-07-20', description: 'Software Subscription', category: 'Software', amount: -99.99, balance: 2576.00}
+  ];
+
+  const sortDirections = {};
+  const tableBodies = {1: document.getElementById('transactions'), 2: document.getElementById('transactions2')};
+
+  function formatNumber(num) {
+    return num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
+  function renderTable(data, tableId) {
+    const target = tableBodies[tableId];
+    target.innerHTML = '';
+    data.forEach(tx => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><input type="number" class="match-input"></td>
+        <td>${tx.date}</td>
+        <td>${tx.description}</td>
+        <td>${tx.category}</td>
+        <td style="color:${tx.amount < 0 ? 'red' : 'green'}">${formatNumber(tx.amount)}</td>
+        <td>${formatNumber(tx.balance)}</td>
+      `;
+      target.appendChild(row);
+    });
+  }
+
+  function updateButtonArrow(tableId, column, direction) {
+    document.querySelectorAll(`.sort-button[data-table='${tableId}']`).forEach(btn => {
+      if (btn.getAttribute('data-column') === column) {
+        btn.textContent = direction === 'asc' ? 'Sort ▲' : 'Sort ▼';
+      } else {
+        btn.textContent = 'Sort';
+      }
+    });
+  }
+
+  function sortTable(tableId, column) {
+    const direction = sortDirections[tableId + column] === 'asc' ? 'desc' : 'asc';
+    sortDirections[tableId + column] = direction;
+
+    fakeTransactions.sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return direction === 'asc' ? valA - valB : valB - valA;
+      } else {
+        return direction === 'asc' ? valA.toString().localeCompare(valB.toString()) : valB.toString().localeCompare(valA.toString());
+      }
+    });
+
+    updateButtonArrow(tableId, column, direction);
+    renderTable(fakeTransactions, tableId);
+  }
+
+  function applyFilters(tableId) {
+    const filters = {};
+    document.querySelectorAll(`.filter-input[data-table='${tableId}']`).forEach(inp => {
+      if (inp.value) filters[inp.dataset.column] = inp.value.toLowerCase();
+    });
+    const filtered = fakeTransactions.filter(tx => {
+      return Object.keys(filters).every(key => tx[key].toString().toLowerCase().includes(filters[key]));
+    });
+    renderTable(filtered, tableId);
+  }
+
+  function clearFilter(tableId, column) {
+    document.querySelector(`.filter-input[data-table='${tableId}'][data-column='${column}']`).value = '';
+    applyFilters(tableId);
+  }
+
+  document.querySelectorAll('.sort-button').forEach(button => {
+    button.addEventListener('click', () => {
+      sortTable(button.dataset.table, button.dataset.column);
+    });
+  });
+
+  document.querySelectorAll('.filter-button').forEach(button => {
+    button.addEventListener('click', () => {
+      applyFilters(button.dataset.table);
+    });
+  });
+
+  document.querySelectorAll('.remove-filter-button').forEach(button => {
+    button.addEventListener('click', () => {
+      clearFilter(button.dataset.table, button.dataset.column);
+    });
+  });
+
+  renderTable(fakeTransactions, 1);
+  renderTable(fakeTransactions, 2);
+</script>
+</body>
+</html>
