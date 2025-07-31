@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balance Sheet Reconciliation - PHG Accounting Web App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+<style>
+  body { margin: 0; font-family: 'Roboto', sans-serif; background: url('https://static.vecteezy.com/system/resources/thumbnails/056/656/957/small/a-serene-hospital-corridor-featuring-modern-design-plants-and-soft-lighting-creating-a-calming-atmosphere-photo.JPG') no-repeat center center fixed; background-size: cover; display: flex; flex-direction: column; min-height: 100vh; transition: background-color 0.3s, color 0.3s; }
+  body.dark { background-color: #121212; color: #e0e0e0; background-image: none; }
+  header { background-color: rgba(0,48,87,0.9); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 10px 40px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+  .logo img { height: 50px; }
+  nav ul { list-style: none; display: flex; margin: 0; padding: 0; }
+  nav ul li { margin-left: 30px; }
+  nav ul li a { text-decoration: none; color: #ffffff; font-weight: 500; font-size: 18px; position: relative; transition: color 0.3s ease; }
+  nav ul li a:hover { color: #f8b600; }
+  .container { flex: 1; margin: 80px auto 40px auto; padding: 25px 40px; background: rgba(255,255,255,0.6); border-radius: 8px; max-width: 900px; text-align: center; }
+  h1 { font-size: 2rem; color: #003057; margin-bottom: 20px; text-align: center; }
+  .gl-balance { margin-bottom: 30px; text-align: left; display: grid; grid-template-columns: repeat(3, 1fr); grid-row-gap: 15px; grid-column-gap: 15px; }
+  .gl-balance label { font-weight: bold; margin-bottom: 5px; font-size: 16px; display: block; }
+  .gl-field { display: flex; flex-direction: column; }
+  .gl-balance input { padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; text-align: right; }
+  table { width: 100%; border-collapse: collapse; background: white; }
+  table thead { background: rgba(0,48,87,0.9); color: white; }
+  table th, table td { padding: 10px; text-align: left; border: 1px solid #ccc; }
+  table td input { width: 95%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; text-align: right; }
+  table td input.invalid { border-color: red; background-color: #ffe5e5; }
+  .add-row { margin-top: 15px; text-align: right; }
+  .add-row button { background: #003057; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+  .add-row button:hover { background: #005080; }
+  .export-buttons { position: sticky; bottom: 0; background: rgba(255,255,255,0.9); padding: 10px; text-align: center; }
+  .export-buttons button { background: #003057; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin: 0 10px; }
+  .export-buttons button:hover { background: #005080; }
+  .total { margin-top: 20px; text-align: right; font-weight: bold; font-size: 18px; color: #003057; }
+  footer { background-color: rgba(0,48,87,0.9); color: #fff; text-align: center; padding: 15px 20px; font-size: 14px; box-shadow: 0 -2px 6px rgba(0,0,0,0.2); }
+  @media print { .export-buttons, .add-row { display: none; } }
+</style>
+</head>
+<body>
+  <div id="header"></div>
+  <div class="container">
+    <h1>Balance Sheet Reconciliation</h1>
+    <button onclick="toggleTheme()">Toggle Dark/Light Mode</button>
+    <div class="gl-balance">
+      <div class="gl-field"><label for="facilityName">Facility Name:</label><input type="text" id="facilityName" value="American Regional Medical Center"></div>
+      <div class="gl-field"><label for="glAccountNumber">GL Act #:</label><input type="text" id="glAccountNumber" value="1011845"></div>
+      <div class="gl-field"><label for="preparedBy">Prepared By:</label><input type="text" id="preparedBy" value="Will Martin"></div>
+      <div class="gl-field"><label for="monthEnd">Month Ending:</label><input type="month" id="monthEnd" value="2025-07"></div>
+      <div class="gl-field"><label for="glDescription">GL Act Description:</label><input type="text" id="glDescription" value="Operating Cash"></div>
+      <div class="gl-field"><label for="glBalance">General Ledger Balance:</label><input type="text" id="glBalance" value="1085218.27" oninput="updateTotal();"></div>
+    </div>
+    <table id="reconTable">
+      <thead><tr><th>Description</th><th>Date</th><th>Amount</th></tr></thead>
+      <tbody>
+        <tr><td><input type="text" value="Bank Statement"></td><td><input type="date" value="2025-07-31"></td><td><input type="text" value="1210215.79" oninput="updateTotal();"></td></tr>
+        <tr><td><input type="text" value="Outstanding Checks"></td><td><input type="date" value="2025-07-31"></td><td><input type="text" value="-152156.94" oninput="updateTotal();"></td></tr>
+        <tr><td><input type="text" value="Deposits in Transit"></td><td><input type="date" value="2025-07-31"></td><td><input type="text" value="27159.42" oninput="updateTotal();"></td></tr>
+      </tbody>
+    </table>
+    <div class="add-row"><button onclick="addRow()">Add Reconciling Item</button></div>
+    <div class="total">Total: $<span id="totalAmount">0.00</span></div>
+    <div class="total">Unreconciled Variance: $<span id="varianceAmount">0.00</span></div>
+    <div class="export-buttons">
+      <button onclick="exportToPDF()">Export to PDF</button>
+      <button onclick="exportToExcel()">Export to Excel</button>
+    </div>
+  </div>
+  <div id="footer"></div>
+  <script>
+    const { jsPDF } = window.jspdf;
+
+    fetch('header.html').then(r=>r.text()).then(html=>document.getElementById('header').innerHTML=html).catch(err=>console.error('Error loading header:',err));
+    fetch('footer.html').then(r=>r.text()).then(html=>document.getElementById('footer').innerHTML=html).catch(err=>console.error('Error loading footer:',err));
+
+    function toggleTheme(){document.body.classList.toggle('dark');}
+
+    function parseNumber(value){return parseFloat(value)||0;}
+
+    function addRow(){
+      const table=document.getElementById('reconTable').getElementsByTagName('tbody')[0];
+      const newRow=table.insertRow();
+      newRow.innerHTML=`<td><input type="text" placeholder="Description"></td><td><input type="date"></td><td><input type="text" placeholder="Amount" oninput="updateTotal()"></td>`;
+    }
+
+    function updateTotal(){
+      let total=0;
+      document.querySelectorAll('#reconTable tbody tr').forEach(row=>{
+        const amountInput=row.cells[2].querySelector('input');
+        total+=parseNumber(amountInput.value);
+      });
+      document.getElementById('totalAmount').textContent=total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+      const glBalance=parseNumber(document.getElementById('glBalance').value.toString());
+      const variance=glBalance-total;
+      document.getElementById('varianceAmount').textContent=variance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+
+    updateTotal();
+
+    function exportToPDF(){
+      const doc=new jsPDF('p','pt','a4');
+
+      let y=40;
+      doc.setFontSize(16);
+      doc.text('Balance Sheet Reconciliation',40,y,{maxWidth:500});
+      y+=30;
+
+      const facility=document.getElementById('facilityName').value;
+      const glAct=document.getElementById('glAccountNumber').value;
+      const preparedBy=document.getElementById('preparedBy').value;
+      const monthEnd=document.getElementById('monthEnd').value;
+      const glDesc=document.getElementById('glDescription').value;
+      const glBalance=document.getElementById('glBalance').value;
+
+      doc.setFontSize(11);
+      const headerText=`Facility: ${facility}\nGL Account #: ${glAct}\nPrepared By: ${preparedBy}\nMonth Ending: ${monthEnd}\nAccount Description: ${glDesc}\nGeneral Ledger Balance: $${glBalance}`;
+      const lines=doc.splitTextToSize(headerText,500);
+      doc.text(lines,40,y);
+      y+=lines.length*14+10;
+
+      const rows=[];
+      document.querySelectorAll('#reconTable tbody tr').forEach(row=>{
+        const desc=row.cells[0].querySelector('input').value;
+        const date=row.cells[1].querySelector('input').value;
+        const amount=row.cells[2].querySelector('input').value;
+        rows.push([desc,date,amount]);
+      });
+
+      rows.push(["","Total:",document.getElementById('totalAmount').textContent]);
+      rows.push(["","Unreconciled Variance:",document.getElementById('varianceAmount').textContent]);
+
+      doc.autoTable({
+        startY:y,
+        head:[['Description','Date','Amount']],
+        body:rows,
+        styles:{cellWidth:'wrap',fontSize:10},
+        columnStyles:{0:{cellWidth:200},1:{cellWidth:100},2:{halign:'right'}}
+      });
+
+      doc.save('Balance_Sheet_Reconciliation.pdf');
+    }
+
+    function exportToExcel(){alert('Export to Excel functionality not implemented yet.');}
+  </script>
+</body>
+</html>

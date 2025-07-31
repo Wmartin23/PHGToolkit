@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Recs - PHG Accounting Web App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: url('https://static.vecteezy.com/system/resources/thumbnails/056/656/957/small/a-serene-hospital-corridor-featuring-modern-design-plants-and-soft-lighting-creating-a-calming-atmosphere-photo.JPG') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    background-color: rgba(0,48,87,0.9);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 40px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .logo img { height: 50px; }
+  nav ul { list-style: none; display: flex; margin: 0; padding: 0; }
+  nav ul li { margin-left: 30px; }
+  nav ul li a {
+    text-decoration: none;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 18px;
+    position: relative;
+    transition: color 0.3s ease;
+  }
+  nav ul li a:hover { color: #f8b600; }
+  .container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 80px auto 40px auto;
+    padding: 25px 40px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 8px;
+    max-width: 900px;
+    flex-direction: column;
+  }
+  table {
+    border-collapse: collapse;
+    margin-top: 20px;
+    width: 100%;
+    background: white;
+  }
+  table, th, td {
+    border: 1px solid #666;
+    padding: 6px 10px;
+  }
+  th {
+    background-color: #003057;
+    color: #fff;
+  }
+  footer {
+    background-color: rgba(0,48,87,0.9);
+    color: #fff;
+    text-align: center;
+    padding: 15px 20px;
+    font-size: 14px;
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Dynamic header -->
+  <div id="header"></div>
+
+  <div class="container">
+    <h1 id="status">Loading data...</h1>
+  </div>
+
+  <!-- Dynamic footer -->
+  <div id="footer"></div>
+
+  <script>
+    // Load shared header
+    fetch('header.html')
+      .then(response => response.text())
+      .then(html => document.getElementById('header').innerHTML = html)
+      .catch(err => console.error('Error loading header:', err));
+
+    // Load shared footer
+    fetch('footer.html')
+      .then(response => response.text())
+      .then(html => document.getElementById('footer').innerHTML = html)
+      .catch(err => console.error('Error loading footer:', err));
+
+    // Fetch data from Node.js backend
+    fetch('http://localhost:3000/data')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Fetched data:', data);
+        let container = document.querySelector('.container');
+
+        if (!data || data.length === 0) {
+          container.innerHTML = '<p>No data found.</p>';
+          return;
+        }
+
+        // Create table
+        let table = document.createElement('table');
+
+        // Header
+        let thead = document.createElement('thead');
+        let headerRow = document.createElement('tr');
+        Object.keys(data[0]).forEach(col => {
+          let th = document.createElement('th');
+          th.textContent = col;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Rows
+        let tbody = document.createElement('tbody');
+        data.forEach(row => {
+          let tr = document.createElement('tr');
+          Object.values(row).forEach(val => {
+            let td = document.createElement('td');
+            td.textContent = val;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+
+        container.innerHTML = '<h1>Database Results</h1>';
+        container.appendChild(table);
+      })
+      .catch(err => {
+        console.error('Error fetching data:', err);
+        document.querySelector('.container').innerHTML = '<p>Error loading data. Check console.</p>';
+      });
+  </script>
+
+</body>
+</html>

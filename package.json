@@ -1,0 +1,27 @@
+{
+  "name": "phgtoolkit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wmartin23/PHGToolkit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Wmartin23/PHGToolkit/issues"
+  },
+  "homepage": "https://github.com/Wmartin23/PHGToolkit#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "odbc": "^2.4.9"
+  }
+}
